@@ -1,0 +1,17 @@
+# Virtual Environment
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+
+# Local Database (Starts fresh on deploy)
+database/secureshare.db
+
+# Encrypted storage blobs & temp files
+storage/encrypted_files/*
+storage/temp/*
+
+# OS metadata
+.DS_Store
+Thumbs.db

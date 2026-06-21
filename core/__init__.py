@@ -1,0 +1,1 @@
+# SecureShare core package
