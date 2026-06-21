@@ -397,6 +397,9 @@ else:
     # 2. ----------------- SEND FILE -----------------
     elif st.session_state.current_page == "Send File":
         st.markdown("<h2 style='color: #F8FAFC; margin-bottom: 2px;'>Secure File Dispatch</h2>", unsafe_allow_html=True)
+        if "send_success_msg" in st.session_state and st.session_state.send_success_msg:
+            st.success(st.session_state.send_success_msg)
+            st.session_state.send_success_msg = None
         st.markdown("<p class='subtitle-text'>Documents are encrypted with the recipient's public key before persistence.</p>", unsafe_allow_html=True)
         
         contacts = get_contacts(user["id"])
@@ -486,14 +489,21 @@ else:
                             expiry_days=expiry_days if expiry_days > 0 else None,
                             one_time_only=one_time_only
                         )
-                        st.success(f"🎉 Document encrypted and queued. Reference UID: {file_uid}")
+                        st.session_state.send_success_msg = f"🎉 Document encrypted and queued. Reference UID: {file_uid}"
                         st.session_state.prefilled_recipient_id = ""
+                        st.rerun()
                     except ValueError as e:
                         st.error(str(e))
 
     # 3. ----------------- INBOX (RECEIVED FILES) -----------------
     elif st.session_state.current_page == "Inbox":
-        st.markdown("<h2 style='color: #F8FAFC; margin-bottom: 2px;'>Secure Incoming Ledger</h2>", unsafe_allow_html=True)
+        col_title, col_ref = st.columns([4, 1.2])
+        with col_title:
+            st.markdown("<h2 style='color: #F8FAFC; margin-bottom: 2px;'>Secure Incoming Ledger</h2>", unsafe_allow_html=True)
+        with col_ref:
+            st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+            if st.button("🔄 Refresh Inbox", use_container_width=True):
+                st.rerun()
         st.markdown("<p class='subtitle-text'>Encrypted files routed to your private gateway. Load your session private key to decrypt.</p>", unsafe_allow_html=True)
         
         # Display Decryption Process Terminal Logs if available
@@ -598,7 +608,13 @@ else:
 
     # 4. ----------------- SENT FILES (OUTBOX) -----------------
     elif st.session_state.current_page == "Sent Files":
-        st.markdown("<h2 style='color: #F8FAFC; margin-bottom: 2px;'>Outgoing Audit Ledger</h2>", unsafe_allow_html=True)
+        col_title, col_ref = st.columns([4, 1.2])
+        with col_title:
+            st.markdown("<h2 style='color: #F8FAFC; margin-bottom: 2px;'>Outgoing Audit Ledger</h2>", unsafe_allow_html=True)
+        with col_ref:
+            st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+            if st.button("🔄 Refresh Outbox", use_container_width=True):
+                st.rerun()
         st.markdown("<p class='subtitle-text'>Monitor delivery status and revoke access to sent payloads.</p>", unsafe_allow_html=True)
         
         sent_files = get_sent_files(user["id"])
