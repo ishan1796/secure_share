@@ -1,4 +1,6 @@
 # SecureShare: End-to-End Encrypted File Transfer Platform
+# secureshare.streamlit.app
+
 
 SecureShare is a production-style MVP for a secure document exchange platform. It enables registered users to transfer confidential documents (e.g., IDs, contracts, salary slips) using **Zero-Knowledge Hybrid Encryption**. Plaintext files are never stored on the server, and the database holds only encrypted metadata and cryptographic payloads.
 
