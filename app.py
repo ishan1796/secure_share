@@ -252,6 +252,36 @@ def render_telemetry_header():
     </div>
     """, unsafe_allow_html=True)
 
+def render_security_manual(view_name: str):
+    """Render a clean, context-aware cryptographic protocol reference guide at the bottom of the page."""
+    st.markdown("---")
+    with st.expander("🛡️ SECURESHARE PROTOCOL REFERENCE MANUAL", expanded=False):
+        if view_name == "Dashboard":
+            st.markdown("""
+            ### 🔑 Ephemeral User Key-State Protocol
+            1. **On Authentication**: The standard password you input is verified against the bcrypt database hash.
+            2. **Unwrapping Private Key**: Simultaneously, your password is fed into a **PBKDF2 KDF** with a random salt (100k rounds) to derive an AES-256 master key. This master key decrypts your RSA private key.
+            3. **In-Memory RAM Caching**: The decrypted RSA private key is held strictly in Streamlit's ephemeral `st.session_state` RAM. The server never stores your unencrypted private key or your plaintext password on disk.
+            4. **Automatic Garbage Collection**: As soon as you click logout or close the connection, the keys are wiped from session memory.
+            """)
+        elif view_name == "Send File":
+            st.markdown("""
+            ### 📤 Asymmetric File Wrap Protocol
+            1. **Recipient Key Lookup**: The sender queries the recipient's SecureShare ID to fetch their RSA-2048 public key from the database.
+            2. **Ephemeral AES Key generation**: A cryptographically secure random 256-bit AES key is generated.
+            3. **Payload Enciphering**: The payload bytes are encrypted using **AES-256-GCM** with a random 12-byte IV (nonce), producing the ciphertext and an integrity authentication tag.
+            4. **Key Wrapping**: The 256-bit AES key is wrapped (encrypted) with the recipient's RSA public key using **OAEP padding (SHA-256)**.
+            5. **Server Storage**: The server stores only the encrypted payload on disk and the wrapped key + IV in SQLite. The server is mathematically unable to read the file.
+            """)
+        elif view_name == "Inbox":
+            st.markdown("""
+            ### 📥 Recipient Handshake & Decryption Protocol
+            1. **Unwrapping Handshake**: When you click **Decrypt & Verify**, the app retrieves the wrapped AES key and IV from the file record.
+            2. **RSA Decryption**: Your local RSA private key (retrieved from secure session memory) decrypts/unwraps the AES key.
+            3. **AES-GCM Payload Deciphering**: The ciphertext is loaded from disk and decrypted in-memory. The GCM authentication tag is verified to ensure the file was not modified.
+            4. **Forward Secrecy Enforcement**: If 'One-time download' is active, the encrypted payload file is deleted from the server disk (`os.remove()`) immediately upon successful download, achieving forward secrecy.
+            """)
+
 # ----------------- LOGIN / REGISTER PORTAL -----------------
 if not st.session_state.logged_in:
     st.markdown("<h1 class='title-gradient'>Institutional Security Portal</h1>", unsafe_allow_html=True)
@@ -393,6 +423,8 @@ else:
             if st.button("👥 Directory Contacts", use_container_width=True):
                 st.session_state.current_page = "Contacts"
                 st.rerun()
+        
+        render_security_manual("Dashboard")
 
     # 2. ----------------- SEND FILE -----------------
     elif st.session_state.current_page == "Send File":
@@ -494,6 +526,8 @@ else:
                         st.rerun()
                     except ValueError as e:
                         st.error(str(e))
+        
+        render_security_manual("Send File")
 
     # 3. ----------------- INBOX (RECEIVED FILES) -----------------
     elif st.session_state.current_page == "Inbox":
@@ -605,6 +639,8 @@ else:
                         else:
                             st.write("")
                             st.info(f"Settled ({file_data['status']})")
+        
+        render_security_manual("Inbox")
 
     # 4. ----------------- SENT FILES (OUTBOX) -----------------
     elif st.session_state.current_page == "Sent Files":
